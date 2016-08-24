@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System;
 
 public class MoveLeftRight : Part {
 
@@ -25,6 +26,10 @@ public class MoveLeftRight : Part {
         MoveLeft.Instance.MovePlayer(m);
     }
     public override string Name()
+    {
+        return "MoveLeftRight";
+    }
+    public override string Type()
     {
         return "MoveLeftRight";
     }

@@ -56,10 +56,15 @@ public class MoveitMoveit : MonoBehaviour {
         get;
         private set;
     }
-    private List<Part> partList
+    public List<Part> partList
     {
         get;
-        set;
+        private set;
+    }
+    public List<Part> disabledPartList
+    {
+        get;
+        private set;
     }
     void Start ()
     {
@@ -75,6 +80,7 @@ public class MoveitMoveit : MonoBehaviour {
         currentCollisionRightDirection = new List<GameObject>();
         partList = new List<Part>();
         partList.Add(MoveRight.Instance);
+        disabledPartList = new List<Part>();
     }
 
     void UpdateDoor()
@@ -96,7 +102,7 @@ public class MoveitMoveit : MonoBehaviour {
             currentCollisionRightDirection.Count > 0 && currentCollisionLeftDirection.Count > 0
         )
         {
-            DieTrigger.Die(this.GetComponent<GameObject>());
+            DieTrigger.Die(GetComponent<GameObject>());
         }
     }
 
@@ -109,7 +115,12 @@ public class MoveitMoveit : MonoBehaviour {
                 flag = true;
         }
         if (!flag) return flag;
-        if (GetComponent<Rigidbody2D>().velocity.x == 0) return false;
+        if (currentCollisionLeftDirection.Count + currentCollisionRightDirection.Count > 0)
+        {
+            jumpCount = 0;
+            return false;
+        }
+        if (Math.Abs(GetComponent<Rigidbody2D>().velocity.x) <2e-2) return false;
         return true;
     }
 
@@ -123,6 +134,7 @@ public class MoveitMoveit : MonoBehaviour {
 
         bool isOnIce = OnIce();
         float xVelocity = GetComponent<Rigidbody2D>().velocity.x;
+        GetComponent<Rigidbody2D>().velocity = new Vector2(0, GetComponent<Rigidbody2D>().velocity.y);
         if (isOnIce) jumpCount = 999;
         
 
@@ -130,6 +142,8 @@ public class MoveitMoveit : MonoBehaviour {
         foreach (Part x in partList)
             x.MovePlayer(this);
 
+        Debug.Log("beg");
+        Debug.Log(GetComponent<Rigidbody2D>().velocity);
         foreach(GameObject g in currentCollisionUpDirection)
         {
             Vector2 velocity = GetComponent<Rigidbody2D>().velocity;
@@ -142,12 +156,32 @@ public class MoveitMoveit : MonoBehaviour {
                 GetComponent<Rigidbody2D>().velocity = new Vector2(velocity.x + float.Parse(words[1]), velocity.y);
             }
         }
+        Debug.Log(GetComponent<Rigidbody2D>().velocity);
 
         if (isOnIce)
             GetComponent<Rigidbody2D>().velocity = new Vector2(xVelocity, GetComponent<Rigidbody2D>().velocity.y);
 
     }
-
+    public void Addpart(Part part)
+    {
+        List<int> rm = new List<int>();
+        for (int i = 0; i < partList.Count; i++)
+        {
+            if (partList[i].Type() == part.Type())
+            {
+                disabledPartList.Add(partList[i]);
+                partList.Remove(partList[i]);
+            }
+        }
+        for(int i=0; i<disabledPartList.Count; i++)
+        {
+            if(disabledPartList[i].Name() == part.Name())
+            {
+                disabledPartList.Remove(disabledPartList[i]);
+            }
+        }
+        partList.Add(part);
+    }
     void OnTriggerEnter2D(Collider2D collision)
     {
         if (collision.gameObject.tag == "Door")
@@ -157,8 +191,8 @@ public class MoveitMoveit : MonoBehaviour {
         }
         if(collision.gameObject.tag == "Part")
         {
-            Player p = Player.Instance;
-            partList.Add(PartManager.getPart(collision.gameObject.name));
+            Part part = PartManager.getPart(collision.gameObject.name);
+            Addpart(part);
             Destroy(collision.gameObject);
         }
     }
@@ -180,8 +214,10 @@ public class MoveitMoveit : MonoBehaviour {
         Vector2 vector2 = (collision.contacts[0].point - collision.contacts[1].point) ;
         if (System.Math.Abs(vector2.x) < 2e-2 && System.Math.Abs(vector2.y) < 2e-2)
             return;
+        Debug.Log(collision.gameObject);
+        Debug.Log(collision.contacts[0].normal);
 
-        if(collision.gameObject.tag.StartsWith("Wall") )
+        if (collision.gameObject.tag.StartsWith("Wall") )
         {
             Vector2 normalVector = collision.contacts[0].normal;
             if (normalVector == Vector2.up)

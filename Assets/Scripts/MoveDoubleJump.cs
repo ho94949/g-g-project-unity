@@ -38,4 +38,8 @@ public class MoveDoubleJump : Part
     {
         return "MoveDoubleJump";
     }
+    public override string Type()
+    {
+        return "MoveJump";
+    }
 }

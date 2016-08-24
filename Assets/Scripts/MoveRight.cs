@@ -65,4 +65,8 @@ public  class MoveRight : Part
     {
         return "MoveRight";
     }
+    public override string Type()
+    {
+        return "MoveRight";
+    }
 }

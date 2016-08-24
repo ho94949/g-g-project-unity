@@ -15,10 +15,10 @@ public class Belt : MonoBehaviour {
         range = float.Parse(Regex.Split(name, "__")[1]);
         if (range < 0)
         {
-            s.Add(Resources.Load<Sprite>("belt_04"));
-            s.Add(Resources.Load<Sprite>("belt_03"));
-            s.Add(Resources.Load<Sprite>("belt_02"));
             s.Add(Resources.Load<Sprite>("belt_01"));
+            s.Add(Resources.Load<Sprite>("belt_02"));
+            s.Add(Resources.Load<Sprite>("belt_03"));
+            s.Add(Resources.Load<Sprite>("belt_04"));
         }
         else
         {
@@ -34,11 +34,18 @@ public class Belt : MonoBehaviour {
 	void Update () {
         ++frame;
         int rframe = (int)((frame * range) / 10.0);
+        /*Debug.Log(rframe);
         rframe %= 4;
         rframe += 4;
         rframe %= 4;
-        rframe++;
+        Debug.Log(rframe);
+        GetComponent<SpriteRenderer>().sprite = s[rframe];*/
+        if (rframe < 0)
+        {
+            rframe = -rframe;
+        }
+        rframe %= 4;
         GetComponent<SpriteRenderer>().sprite = s[rframe];
-        
-	}
+
+    }
 }

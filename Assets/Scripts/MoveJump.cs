@@ -35,4 +35,8 @@ public class MoveJump : Part
     {
         return "MoveJump";
     }
+    public override string Type()
+    {
+        return "MoveJump";
+    }
 }
