@@ -48,7 +48,7 @@ public  class MoveRight : Part
             return;
         }
         prevmove = true;
-        if (m.curColleftdir.Count != 0) return;
+        if (m.currentCollisionLeftDirection.Count != 0) return;
         m.GetComponent<Rigidbody2D>().velocity = new Vector2(LRMove * 3.0f, velocity.y);
 
         if(LRMove > 0.5f)

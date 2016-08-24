@@ -23,8 +23,9 @@ public class MoveDoubleJump : Part
 
     public override void MovePlayer(MoveitMoveit m)
     {
-        bool isJump = Input.GetAxis("Jump") > 0.5f;
-        if (!prevJump && isJump && 2 > m.jumpCount) 
+        Debug.Log(m.jumpCount);
+        bool isJump = Input.GetAxisRaw("Jump") > 0.5f;
+        if (!prevJump &&  isJump && 2 > m.jumpCount) 
         {
             m.jumpCount++;
             Vector2 velocity = m.GetComponent<Rigidbody2D>().velocity;

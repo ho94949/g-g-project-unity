@@ -5,23 +5,23 @@ public static class PartManager {
 
 	public static Part getPart(string partName)
     {
-        if(partName.Substring(2) == "MoveRight")
+        if(partName == "MoveRight")
         {
             return MoveRight.Instance;
         }
-        if (partName.Substring(2) == "MoveLeft")
+        if (partName == "MoveLeft")
         {
             return MoveLeft.Instance;
         }
-        if (partName.Substring(2) == "MoveLeftRight")
+        if (partName == "MoveLeftRight")
         {
             return MoveLeftRight.Instance;
         }
-        if (partName.Substring(2) == "MoveJump")
+        if (partName == "MoveJump")
         {
             return MoveJump.Instance;
         }
-        if (partName.Substring(2) == "MoveDoubleJump")
+        if (partName == "MoveDoubleJump")
         {
             return MoveDoubleJump.Instance;
         }

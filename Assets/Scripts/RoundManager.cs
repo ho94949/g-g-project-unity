@@ -9,12 +9,14 @@ public class RoundManager : MonoBehaviour {
 	
 	}
 
+    public void Restart()
+    {
+        SceneManager.LoadScene(SceneManager.GetSceneAt(0).name);
+    }
     void UpdateRestart()
     {
         if (Input.GetAxisRaw("Restart") > 0.5)
-        {
-            SceneManager.LoadScene(SceneManager.GetSceneAt(0).name);
-        }
+            Restart();
     }
 
     // Update is called once per frame

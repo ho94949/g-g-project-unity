@@ -3,6 +3,7 @@ using UnityEngine.SceneManagement;
 using System.Collections;
 using System.Collections.Generic;
 using System;
+using System.Text.RegularExpressions;
 
 
 public class MoveitMoveit : MonoBehaviour {
@@ -12,22 +13,69 @@ public class MoveitMoveit : MonoBehaviour {
     {
         get; set;
     }
-    public int frame;
-    public Sprite spriteDisplay;
-    public int spriteDisplayPriority;
-    public Sprite defaultSpriteDisplay;
-    string MoveDoorName = "";
-    bool onDoor = false;
-    int framecount = 0;
-	void Start ()
+    public int frame
+    {
+        get;
+        private set;
+    }
+    public Sprite spriteDisplay
+    {
+        get;
+        set;
+    }
+    public int spriteDisplayPriority
+    {
+        get;
+        set;
+    }
+    private Sprite defaultSpriteDisplay;
+    private string MoveDoorName = "";
+    private bool onDoor = false;
+    public List<GameObject> currentCollision
+    {
+        get;
+        private set;
+    }
+    public List<GameObject> currentCollisionUpDirection
+    {
+        get;
+        private set;
+    }
+    public List<GameObject> currentCollisionDownDirection
+    {
+        get;
+        private set;
+    }
+    public List<GameObject> currentCollisionLeftDirection
+    {
+        get;
+        private set;
+    }
+    public List<GameObject> currentCollisionRightDirection
+    {
+        get;
+        private set;
+    }
+    private List<Part> partList
+    {
+        get;
+        set;
+    }
+    void Start ()
     {
         frame = 0;
         jumpCount = 0;
         spriteDisplayPriority = 0;
         defaultSpriteDisplay = Resources.Load<Sprite>("robot_standing_01");
         spriteDisplay = defaultSpriteDisplay;
+        currentCollision = new List<GameObject>();
+        currentCollisionUpDirection = new List<GameObject>();
+        currentCollisionDownDirection = new List<GameObject>();
+        currentCollisionLeftDirection = new List<GameObject>();
+        currentCollisionRightDirection = new List<GameObject>();
+        partList = new List<Part>();
+        partList.Add(MoveRight.Instance);
     }
-
 
     void UpdateDoor()
     {
@@ -36,29 +84,68 @@ public class MoveitMoveit : MonoBehaviour {
             SceneManager.LoadScene(MoveDoorName);
         }
     }
+    
+    void UpdateJumpCount()
+    {
 
-    public List<GameObject> curCol = new List<GameObject>();
-    public List<GameObject> curColupdir = new List<GameObject>();
-    public List<GameObject> curColleftdir = new List<GameObject>();
-    public List<GameObject> curColrightdir = new List<GameObject>();
+    }
+    void UpdateDeath()
+    {
+        if (
+            currentCollisionUpDirection.Count > 0 && currentCollisionDownDirection.Count > 0 ||
+            currentCollisionRightDirection.Count > 0 && currentCollisionLeftDirection.Count > 0
+        )
+        {
+            DieTrigger.Die(this.GetComponent<GameObject>());
+        }
+    }
 
-    // Update is called once per frame
+    bool OnIce()
+    {
+        bool flag = false;
+        foreach(GameObject g in currentCollisionUpDirection)
+        {
+            if (g.tag == "WallIce")
+                flag = true;
+        }
+        if (!flag) return flag;
+        if (GetComponent<Rigidbody2D>().velocity.x == 0) return false;
+        return true;
+    }
+
     void Update ()
     {
+        ++frame;
         UpdateDoor();
-
-        //spriteDisplay = defaultSpriteDisplay;
+        UpdateJumpCount();
+        UpdateDeath();
         spriteDisplayPriority = 0;
 
-        Player p = Player.Instance;
-        if (p.P1 != null) p.P1.MovePlayer(this);
-        if (p.P2 != null) p.P2.MovePlayer(this);
-        if (p.P3 != null) p.P3.MovePlayer(this);
-        //Debug.Log(++framecount);
-        if (curColupdir.Count==0 && jumpCount==0) jumpCount = 1;
-        //Debug.Log(jumpCount);
-        ++frame;
+        bool isOnIce = OnIce();
+        float xVelocity = GetComponent<Rigidbody2D>().velocity.x;
+        if (isOnIce) jumpCount = 999;
+        
+
         this.GetComponent<SpriteRenderer>().sprite = spriteDisplay;
+        foreach (Part x in partList)
+            x.MovePlayer(this);
+
+        foreach(GameObject g in currentCollisionUpDirection)
+        {
+            Vector2 velocity = GetComponent<Rigidbody2D>().velocity;
+            Rigidbody2D rigidbody2D = g.GetComponent<Rigidbody2D>();
+            if (rigidbody2D != null)
+                GetComponent<Rigidbody2D>().velocity = new Vector2(velocity.x + rigidbody2D.velocity.x, velocity.y );
+            if(g.gameObject.name.StartsWith("belt"))
+            {
+                string[] words = Regex.Split(g.gameObject.name, "__");
+                GetComponent<Rigidbody2D>().velocity = new Vector2(velocity.x + float.Parse(words[1]), velocity.y);
+            }
+        }
+
+        if (isOnIce)
+            GetComponent<Rigidbody2D>().velocity = new Vector2(xVelocity, GetComponent<Rigidbody2D>().velocity.y);
+
     }
 
     void OnTriggerEnter2D(Collider2D collision)
@@ -68,25 +155,10 @@ public class MoveitMoveit : MonoBehaviour {
             MoveDoorName = collision.gameObject.name.Substring(5);
             onDoor = true;
         }
-        if(collision.gameObject.tag == "Part1")
+        if(collision.gameObject.tag == "Part")
         {
             Player p = Player.Instance;
-            p.P1 = PartManager.getPart(collision.gameObject.name);
-            Debug.Log(collision.gameObject);
-            Destroy(collision.gameObject);
-        }
-        if (collision.gameObject.tag == "Part2")
-        {
-            Player p = Player.Instance;
-            p.P2 = PartManager.getPart(collision.gameObject.name);
-            Debug.Log(collision.gameObject);
-            Destroy(collision.gameObject);
-        }
-        if (collision.gameObject.tag == "Part3")
-        {
-            Player p = Player.Instance;
-            p.P3 = PartManager.getPart(collision.gameObject.name);
-            Debug.Log(collision.gameObject);
+            partList.Add(PartManager.getPart(collision.gameObject.name));
             Destroy(collision.gameObject);
         }
     }
@@ -100,39 +172,43 @@ public class MoveitMoveit : MonoBehaviour {
 
     void OnCollisionEnter2D(Collision2D collision)
     {
-        curCol.Add(collision.gameObject);
+
+        currentCollision.Add(collision.gameObject);
+
+        //meeting at signle point
         if (collision.contacts.Length < 2) return;
         Vector2 vector2 = (collision.contacts[0].point - collision.contacts[1].point) ;
-        Debug.Log(System.String.Format("{0} {1}", collision.contacts[0].point.x, collision.contacts[0].point.y));
-        Debug.Log(System.String.Format("{0} {1}", collision.contacts[1].point.x, collision.contacts[1].point.y));
-        Debug.Log(collision.contacts[0].normal);
-        Debug.Log(collision.contacts[1].normal);
-        Debug.Log(collision.gameObject);
         if (System.Math.Abs(vector2.x) < 2e-2 && System.Math.Abs(vector2.y) < 2e-2)
             return;
-        Debug.Log(System.Math.Abs(vector2.x));
-        Debug.Log(System.Math.Abs(vector2.y));
-        if (collision.contacts[0].normal.y > (1 - 2e-2) && collision.gameObject.tag == "Wall")
+
+        if(collision.gameObject.tag.StartsWith("Wall") )
         {
-            curColupdir.Add(collision.gameObject);
-            jumpCount = 0;
-            Debug.Log(jumpCount);
+            Vector2 normalVector = collision.contacts[0].normal;
+            if (normalVector == Vector2.up)
+            {
+                currentCollisionUpDirection.Add(collision.gameObject);
+                jumpCount = 0;
+            }
+            if (normalVector == Vector2.down)
+                currentCollisionDownDirection.Add(collision.gameObject);
+            if (normalVector == Vector2.left)
+                currentCollisionLeftDirection.Add(collision.gameObject);
+            if (normalVector == Vector2.right)
+                currentCollisionRightDirection.Add(collision.gameObject);
         }
-        if (collision.contacts[0].normal.x > (1 - 2e-2) && collision.gameObject.tag == "Wall")
-        {
-            curColrightdir.Add(collision.gameObject);
-        }
-        if (collision.contacts[0].normal.x < -(1 - 2e-2) && collision.gameObject.tag == "Wall")
-        {
-            curColleftdir.Add(collision.gameObject);
-        }
+        
     }
     void OnCollisionExit2D(Collision2D collision)
     {
-        curCol.Remove(collision.gameObject);
-        curColupdir.Remove(collision.gameObject);
-        curColleftdir.Remove(collision.gameObject);
-        curColrightdir.Remove(collision.gameObject);
+        currentCollision.Remove(collision.gameObject);
+        int upCnt = currentCollisionUpDirection.Count;
+        currentCollisionUpDirection.Remove(collision.gameObject);
+        int upCnt2 = currentCollisionUpDirection.Count;
+        if (upCnt > 0 && upCnt2 == 0 && jumpCount == 0) jumpCount = 1;
+        currentCollisionDownDirection.Remove(collision.gameObject);
+        currentCollisionLeftDirection.Remove(collision.gameObject);
+        currentCollisionRightDirection.Remove(collision.gameObject);
+        
     }
     
 }
