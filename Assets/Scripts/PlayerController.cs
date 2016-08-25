@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using UnityEngine.SceneManagement;
 using System.Collections;
 using System.Collections.Generic;
 using System;
@@ -44,8 +43,6 @@ public class PlayerController : MonoBehaviour
 
     private float acceleration = 9.8f;
     public float gravityDirection = 1.0f;
-    private bool onDoor;
-    private string moveDoorName;
 
     // Use this for initialization
     void Start ()
@@ -62,14 +59,6 @@ public class PlayerController : MonoBehaviour
         gravityDirection = 1.0f;
     }
 	
-
-    void CheckDoor()
-    {
-        if(onDoor && Input.GetAxisRaw("Submit")>0.5)
-        {
-            SceneManager.LoadScene(moveDoorName);
-        }
-    }
 
 
 	// Update is called once per frame
@@ -150,8 +139,6 @@ public class PlayerController : MonoBehaviour
         GetComponent<SpriteRenderer>().sprite = spriteDisplay;
 
         isJump = Input.GetAxisRaw("Jump") > 0.5;
-
-        CheckDoor();
     }
 
     CollisionDirection CheckWallCollision(Collider2D collision, bool velocityMove)
@@ -188,25 +175,24 @@ public class PlayerController : MonoBehaviour
 
         float dx = CollisionRightUp.x - CollisionLeftDown.x;
         float dy = CollisionRightUp.y - CollisionLeftDown.y;
-        if ((dx < 0.02f && dy < 0.02f)) return PlayerController.CollisionDirection.None;
         if (up && left)
         {
-            if (dx+0.001f > dy) left = false;
+            if (dx+0.1f > dy) left = false;
             else up = false;
         }
         if (up && right)
         {
-            if (dx + 0.001f > dy) right = false;
+            if (dx + 0.1f > dy) right = false;
             else up = false;
         }
         if (down && left)
         {
-            if (dx + 0.001f > dy) left = false;
+            if (dx + 0.1f > dy) left = false;
             else down = false;
         }
         if (down && right)
         {
-            if (dx + 0.001f > dy) right = false;
+            if (dx + 0.1f > dy) right = false;
             else down = false;
         }
         bool isBox = collision.gameObject.tag.StartsWith("WallBox");
@@ -364,19 +350,10 @@ public class PlayerController : MonoBehaviour
         return CollisionDirection.None;
     }
 
-    void OnTriggerExit2D(Collider2D collision)
-    {
-        if (collision.gameObject.tag == "Door")
-            onDoor = false;
-    }
-
+    
     void OnTriggerEnter2D(Collider2D collision)
     {
-        if (collision.gameObject.tag == "Door")
-        {
-            moveDoorName = collision.gameObject.GetComponent<DoorController>().SceneName;
-            onDoor = true;
-        }
+        //CheckWallCollision(collision);
     }
     public void AddPart(Part part)
     {
@@ -400,6 +377,14 @@ public class PlayerController : MonoBehaviour
     }
     void OnTriggerStay2D(Collider2D collision)
     {
+        //CheckWallCollision(collision);
+        /*
+        if (collision.gameObject.tag == "Door")
+        {
+            MoveDoorName = collision.gameObject.name.Substring(5);
+            onDoor = true;
+        }
+        */
         if (collision.gameObject.tag == "Part")
         {
             Part part = PartManager.getPart(collision.gameObject.GetComponent<PartIndicator>().Type);
