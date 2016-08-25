@@ -41,7 +41,7 @@ public class PartReverseGravity : Part {
 
     public override string Type()
     {
-        return "PartReverseGravity";
+        return "PartJump";
     }
 
     public override string Name()
