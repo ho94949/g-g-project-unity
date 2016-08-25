@@ -199,7 +199,7 @@ public class PlayerController : MonoBehaviour
         {
             if(velocityMove) velocity = new Vector2(velocity.x, Math.Max(0.0f,velocity.y) );
             if(gravityDirection > 0)
-                position = new Vector2(position.x, wallRightUp.y + playerSize.y * 0.5f);
+                position = new Vector2(position.x, wallRightUp.y + playerSize.y * 0.49f);
             else
                 position = new Vector2(position.x, wallRightUp.y + playerSize.y * 0.52f);
 
