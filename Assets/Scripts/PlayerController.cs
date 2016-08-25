@@ -213,7 +213,6 @@ public class PlayerController : MonoBehaviour
 
         //Debug.Log(isBoxRight);
         if (up)
-<<<<<<< HEAD
             {
                 if (!isBoxUp)
                 {
@@ -241,7 +240,6 @@ public class PlayerController : MonoBehaviour
                     //this came from down
                     return CollisionDirection.Up;
                 }
-=======
         {
             if(velocityMove) velocity = new Vector2(velocity.x, Math.Max(0.0f,velocity.y) );
             if(gravityDirection > 0)
@@ -278,7 +276,6 @@ public class PlayerController : MonoBehaviour
             return CollisionDirection.Right;
             //this came from right;
         }
->>>>>>> 8e6171d8f49e31d3add58fa466c47313b38cf294
 
             }
             if (down)
