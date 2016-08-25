@@ -213,6 +213,7 @@ public class PlayerController : MonoBehaviour
 
         //Debug.Log(isBoxRight);
         if (up)
+<<<<<<< HEAD
             {
                 if (!isBoxUp)
                 {
@@ -240,6 +241,44 @@ public class PlayerController : MonoBehaviour
                     //this came from down
                     return CollisionDirection.Up;
                 }
+=======
+        {
+            if(velocityMove) velocity = new Vector2(velocity.x, Math.Max(0.0f,velocity.y) );
+            if(gravityDirection > 0)
+                position = new Vector2(position.x, wallRightUp.y + playerSize.y * 0.49f);
+            else
+                position = new Vector2(position.x, wallRightUp.y + playerSize.y * 0.52f);
+
+            //this came from up
+            return CollisionDirection.Up;
+
+        }
+        if (down)
+        {
+            if (velocityMove) velocity = new Vector2(velocity.x, Math.Min(0.0f, velocity.y));
+            if(gravityDirection>0)
+                position = new Vector2(position.x, wallLeftDown.y - playerSize.y * 0.52f);
+            else
+                position = new Vector2(position.x, wallLeftDown.y - playerSize.y * 0.5f);
+
+            //this came from down
+            return CollisionDirection.Down;
+        }
+        if (left)
+        {
+            //this came from left
+            if (velocityMove) velocity = new Vector2(Math.Min(0.0f, velocity.x), velocity.y);
+            position = new Vector2(wallLeftDown.x - playerSize.x * 0.5f, position.y);
+            return CollisionDirection.Left;
+        }
+        if (right)
+        {
+            if (velocityMove) velocity = new Vector2(Math.Max(0.0f, velocity.x), velocity.y);
+            position = new Vector2(wallRightUp.x + playerSize.x * 0.5f, position.y);
+            return CollisionDirection.Right;
+            //this came from right;
+        }
+>>>>>>> 8e6171d8f49e31d3add58fa466c47313b38cf294
 
             }
             if (down)
