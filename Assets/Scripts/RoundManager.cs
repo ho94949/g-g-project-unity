@@ -28,28 +28,31 @@ public class RoundManager : MonoBehaviour {
     void partUpdate()
     {
         int cnt = 0;
-        List<Part> partList = GameObject.FindGameObjectsWithTag("Player")[0].GetComponent<MoveitMoveit>().partList;
+        List<Part> partList = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerController>().partList;
         foreach (Part x in partList)
             foreach (Part y in savedPartList)
             {
                 if (x == y) cnt++;
             }
+
         if (cnt == partList.Count && cnt == savedPartList.Count)
             return;
+
         foreach (GameObject x in savedGameObjectList)
         {
             Destroy(x);
         }
         savedGameObjectList = new List<GameObject>();
         savedPartList = new List<Part>();
-        float xc = -10.3f;
+        float xc = -9.3f;
         float yc = 4.3f;
         foreach (Part x in partList)
         {
             xc += 1.2f;
             savedPartList.Add(x);
             GameObject objToSpawn = new GameObject(x.Name());
-            objToSpawn.transform.position = new Vector2(xc, yc);
+            objToSpawn.transform.parent = Camera.main.gameObject.transform;
+            objToSpawn.transform.localPosition =  new Vector3(xc, yc, 120);
             objToSpawn.AddComponent<SpriteRenderer>();
             Sprite sprite = Resources.Load<Sprite>(x.Name());
             objToSpawn.GetComponent<SpriteRenderer>().sprite = sprite;
@@ -60,7 +63,7 @@ public class RoundManager : MonoBehaviour {
     void disabledPartUpdate()
     {
         int cnt = 0;
-        List<Part> disabledPartList = GameObject.FindGameObjectsWithTag("Player")[0].GetComponent<MoveitMoveit>().disabledPartList;
+        List<Part> disabledPartList = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerController>().disabledPartList;
         foreach (Part x in disabledPartList)
             foreach (Part y in disabledSavedPartList)
             {
@@ -74,31 +77,33 @@ public class RoundManager : MonoBehaviour {
         }
         disabledSavedGameObjectList = new List<GameObject>();
         disabledSavedPartList = new List<Part>();
-        float xc = 10.3f;
+        float xc = 9.3f;
         float yc = 4.3f;
         foreach (Part x in disabledPartList)
         {
             xc -= 1.2f;
             disabledSavedPartList.Add(x);
             GameObject objToSpawn = new GameObject(x.Name());
-            objToSpawn.transform.position = new Vector2(xc, yc);
+            objToSpawn.transform.parent = Camera.main.gameObject.transform;
+            objToSpawn.transform.localPosition = new Vector3(xc, yc, 120);
+            objToSpawn.tag = "PartGenerated";
             objToSpawn.AddComponent<SpriteRenderer>();
             Sprite sprite = Resources.Load<Sprite>(x.Name());
             objToSpawn.GetComponent<SpriteRenderer>().sprite = sprite;
-            objToSpawn.AddComponent<DisplayPart>();
             objToSpawn.AddComponent<BoxCollider2D>();
+            objToSpawn.AddComponent<PartIndicator>();
+            objToSpawn.GetComponent<PartIndicator>().Type = x.getEnum();
             objToSpawn.GetComponent<BoxCollider2D>().isTrigger = true;
             objToSpawn.GetComponent<SpriteRenderer>().sortingLayerName = "Information";
             disabledSavedGameObjectList.Add(objToSpawn);
         }
     }
-    void Update () {
-        UpdateRestart();
-        //Fucking Fucking Show Parts Fucking Fucking Parts Fuck
-        //Oh Yeah Fucking Lets Find Fucking Fuicking P{Arts
-        //oh yea fucking fucking displ;ay fucking fucking parts 
-        partUpdate();
 
+
+    void Update ()
+    {
+        UpdateRestart();
+        partUpdate();
         disabledPartUpdate();
         if (Input.GetMouseButtonDown(0))
         {
@@ -108,13 +113,28 @@ public class RoundManager : MonoBehaviour {
             foreach (RaycastHit2D r in hit)
             {
                 Debug.Log(r.collider);
-                if (r.collider.GetComponent<DisplayPart>() != null)
+                if (r.collider.tag == "PartGenerated" )
                 {
-                    
-                    GameObject.FindGameObjectsWithTag("Player")[0].GetComponent<MoveitMoveit>().Addpart(PartManager.getPart(r.collider.name));
+                    GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerController>().AddPart(PartManager.getPart(r.collider.GetComponent<PartIndicator>().Type));
                 }
 
             }
         }
+    }
+
+    public static void Die()
+    {
+        GameObject g = GameObject.FindGameObjectWithTag("Player");
+        var x = g.transform.position.x;
+        var y = g.transform.position.y;
+        Debug.Log(g.transform.position.x);
+        Debug.Log(g.transform.position.y);
+        GameObject objToSpawn = new GameObject("DieDie");
+        objToSpawn.transform.position = g.transform.position;
+        objToSpawn.AddComponent<SpriteRenderer>();
+        Sprite die = Resources.Load<Sprite>("die");
+        Debug.Log(die);
+        objToSpawn.GetComponent<SpriteRenderer>().sprite = die;
+        Destroy(g);
     }
 }

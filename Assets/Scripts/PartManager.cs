@@ -1,14 +1,28 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System;
 
-public static class PartManager {
-
-	public static Part getPart(string partName)
+public static class PartManager
+{
+	public static Part getPart(PartIndicator.PartType p )
     {
-        if(partName == "MoveRight")
+        switch (p)
         {
-            return MoveRight.Instance;
+
+            case PartIndicator.PartType.Right:
+                return PartRight.Instance;
+
+            case PartIndicator.PartType.Jump:
+                return PartJump.Instance;
+
+            case PartIndicator.PartType.Left:
+                return PartLeft.Instance;
+
+            case PartIndicator.PartType.DoubleJump:
+                return PartDoubleJump.Instance;
+
         }
+        /*
         if (partName == "MoveLeft")
         {
             return MoveLeft.Instance;
@@ -25,6 +39,9 @@ public static class PartManager {
         {
             return MoveDoubleJump.Instance;
         }
+        throw new ArgumentException();
+        //fuck return*/
         return null;
+        
     }
 }
