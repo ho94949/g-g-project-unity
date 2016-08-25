@@ -25,7 +25,7 @@ public class PartDoubleJump : Part
         Vector2 velocity = pc.velocity;
         if (isJump && pc.jumpCount < 2 && !pc.isJump )
         {
-            pc.velocity = new Vector2(velocity.x, 3.5f);
+            pc.velocity = new Vector2(velocity.x, pc.gravityDirection * 3.5f);
             pc.jumpCount++;
         }
     }

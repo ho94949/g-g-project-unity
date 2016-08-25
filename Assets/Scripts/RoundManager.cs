@@ -7,8 +7,8 @@ public class RoundManager : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-	
-	}
+        player = GameObject.FindGameObjectWithTag("Player");
+    }
 
     public void Restart()
     {
@@ -24,11 +24,19 @@ public class RoundManager : MonoBehaviour {
     private List<GameObject> savedGameObjectList = new List<GameObject>();
     private List<Part> disabledSavedPartList = new List<Part>();
     private List<GameObject> disabledSavedGameObjectList = new List<GameObject>();
+
+    public GameObject player;
     // Update is called once per frame
     void partUpdate()
     {
         int cnt = 0;
-        List<Part> partList = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerController>().partList;
+        var p = player;
+        if (p == null)
+            return;
+        if (p.GetComponent<PlayerController>() == null)
+            return;
+
+        List<Part> partList = p.GetComponent<PlayerController>().partList;
         foreach (Part x in partList)
             foreach (Part y in savedPartList)
             {
@@ -62,8 +70,13 @@ public class RoundManager : MonoBehaviour {
     }
     void disabledPartUpdate()
     {
+        if (player == null)
+            return;
+        if (player.GetComponent<PlayerController>() == null)
+            return;
+        
         int cnt = 0;
-        List<Part> disabledPartList = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerController>().disabledPartList;
+        List<Part> disabledPartList = player.GetComponent<PlayerController>().disabledPartList;
         foreach (Part x in disabledPartList)
             foreach (Part y in disabledSavedPartList)
             {
@@ -115,7 +128,7 @@ public class RoundManager : MonoBehaviour {
                 Debug.Log(r.collider);
                 if (r.collider.tag == "PartGenerated" )
                 {
-                    GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerController>().AddPart(PartManager.getPart(r.collider.GetComponent<PartIndicator>().Type));
+                    player.GetComponent<PlayerController>().AddPart(PartManager.getPart(r.collider.GetComponent<PartIndicator>().Type));
                 }
 
             }
@@ -125,16 +138,20 @@ public class RoundManager : MonoBehaviour {
     public static void Die()
     {
         GameObject g = GameObject.FindGameObjectWithTag("Player");
-        var x = g.transform.position.x;
-        var y = g.transform.position.y;
-        Debug.Log(g.transform.position.x);
-        Debug.Log(g.transform.position.y);
-        GameObject objToSpawn = new GameObject("DieDie");
-        objToSpawn.transform.position = g.transform.position;
-        objToSpawn.AddComponent<SpriteRenderer>();
-        Sprite die = Resources.Load<Sprite>("die");
-        Debug.Log(die);
-        objToSpawn.GetComponent<SpriteRenderer>().sprite = die;
-        Destroy(g);
+        if (g)
+        {
+            var x = g.transform.position.x;
+            var y = g.transform.position.y;
+            Debug.Log(g.transform.position.x);
+            Debug.Log(g.transform.position.y);
+            GameObject objToSpawn = new GameObject("DieDie");
+            objToSpawn.tag = "Player";
+            objToSpawn.transform.position = g.transform.position;
+            objToSpawn.AddComponent<SpriteRenderer>();
+            Sprite die = Resources.Load<Sprite>("die");
+            Debug.Log(die);
+            objToSpawn.GetComponent<SpriteRenderer>().sprite = die;
+            Destroy(g);
+        }
     }
 }

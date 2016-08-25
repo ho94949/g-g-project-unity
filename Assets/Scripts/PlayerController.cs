@@ -41,6 +41,9 @@ public class PlayerController : MonoBehaviour
     public int jumpCount;
     public bool isJump;
 
+    private float acceleration = 9.8f;
+    public float gravityDirection = 1.0f;
+
     // Use this for initialization
     void Start ()
     {
@@ -52,6 +55,8 @@ public class PlayerController : MonoBehaviour
         position = new Vector2(GetComponent<Transform>().position.x, GetComponent<Transform>().position.y);
         jumpCount = 0;
         spriteDisplay = defaultSpriteDisplay;
+        acceleration = 9.8f;
+        gravityDirection = 1.0f;
     }
 	
 
@@ -70,11 +75,12 @@ public class PlayerController : MonoBehaviour
         foreach (GameObject obj in GameObject.FindObjectsOfType<GameObject>().Where(_ => _.tag.StartsWith("Wall")))
         {
             CollisionDirection dir = CheckWallCollision(obj.GetComponent<BoxCollider2D>(), true);
-            if (dir == CollisionDirection.Up)
-            {
-                existUpDirection = true;
+            if (
+                dir == CollisionDirection.Up && gravityDirection > 0 ||
+                dir == CollisionDirection.Down && gravityDirection < 0 
+                )
                 jumpCount = 0;
-            }
+            if (dir == CollisionDirection.Up) existUpDirection = true;
             if (dir == CollisionDirection.Down) existDownDirection = true;
             if (dir == CollisionDirection.Left) existLeftDirection = true;
             if (dir == CollisionDirection.Right) existRightDirection = true;
@@ -86,7 +92,13 @@ public class PlayerController : MonoBehaviour
         }
         if (existUpDirection && existDownDirection || existLeftDirection && existRightDirection)
             RoundManager.Die();
-        if (!existUpDirection && jumpCount == 0) jumpCount = 1;
+        if (
+            (
+                (!existUpDirection && gravityDirection > 0) ||
+                (!existDownDirection && gravityDirection < 0) 
+            )
+
+            && jumpCount == 0) jumpCount = 1;
 
 
         foreach (Part p in partList)
@@ -105,17 +117,20 @@ public class PlayerController : MonoBehaviour
         {
 
             CollisionDirection dir = CheckWallCollision(obj.GetComponent<BoxCollider2D>(), false);
-            if (dir == CollisionDirection.Up)
+            if (
+                dir == CollisionDirection.Up && gravityDirection > 0 ||
+                dir == CollisionDirection.Down && gravityDirection < 0 
+            )
             {
                 Rigidbody2D rigidbody2D = obj.GetComponent<Rigidbody2D>();
                 if(rigidbody2D)
                     velocityToAdd += rigidbody2D.velocity;
                 if (obj.tag == "WallBelt")
-                    velocityToAdd += new Vector2(obj.GetComponent<Belt>().velocity, 0.0f);
+                    velocityToAdd += new Vector2(obj.GetComponent<Belt>().velocity * gravityDirection, 0.0f);
             }
         }
         
-        velocity -= new Vector2(0, 9.8f) * Time.deltaTime;
+        velocity -= new Vector2(0, acceleration*gravityDirection) * Time.deltaTime;
         position += new Vector2(velocity.x + velocityToAdd.x, velocity.y + Math.Min(0.0f, velocityToAdd.y - 0.1f)) * Time.deltaTime;
         GetComponent<Transform>().position = new Vector3(position.x, position.y);
 
@@ -183,7 +198,11 @@ public class PlayerController : MonoBehaviour
         if (up)
         {
             if(velocityMove) velocity = new Vector2(velocity.x, Math.Max(0.0f,velocity.y) );
-            position = new Vector2(position.x, wallRightUp.y + playerSize.y * 0.5f);
+            if(gravityDirection > 0)
+                position = new Vector2(position.x, wallRightUp.y + playerSize.y * 0.5f);
+            else
+                position = new Vector2(position.x, wallRightUp.y + playerSize.y * 0.52f);
+
             //this came from up
             return CollisionDirection.Up;
 
@@ -191,7 +210,11 @@ public class PlayerController : MonoBehaviour
         if (down)
         {
             if (velocityMove) velocity = new Vector2(velocity.x, Math.Min(0.0f, velocity.y));
-            position = new Vector2(position.x, wallLeftDown.y - playerSize.y * 0.52f);
+            if(gravityDirection>0)
+                position = new Vector2(position.x, wallLeftDown.y - playerSize.y * 0.52f);
+            else
+                position = new Vector2(position.x, wallLeftDown.y - playerSize.y * 0.5f);
+
             //this came from down
             return CollisionDirection.Down;
         }

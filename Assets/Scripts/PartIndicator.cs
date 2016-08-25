@@ -8,6 +8,7 @@ public class PartIndicator : MonoBehaviour
         Right,
         Jump,
         DoubleJump,
+        ReverseGravity,
     }
 
     public PartType Type;

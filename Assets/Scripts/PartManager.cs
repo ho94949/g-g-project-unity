@@ -21,6 +21,9 @@ public static class PartManager
             case PartIndicator.PartType.DoubleJump:
                 return PartDoubleJump.Instance;
 
+            case PartIndicator.PartType.ReverseGravity:
+                return PartReverseGravity.Instance;
+
         }
         /*
         if (partName == "MoveLeft")
