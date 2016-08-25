@@ -60,6 +60,7 @@ public class PlayerController : MonoBehaviour
     }
 	
 
+
 	// Update is called once per frame
 	void Update ()
     {
@@ -112,11 +113,12 @@ public class PlayerController : MonoBehaviour
 
         //Deprecated but (possibly) working code
 
+        velocity -= new Vector2(0, acceleration * gravityDirection) * Time.deltaTime;
         Vector2 velocityToAdd = new Vector2(0.0f, 0.0f);
         foreach (GameObject obj in GameObject.FindObjectsOfType<GameObject>().Where(_ => _.tag.StartsWith("Wall")))
         {
 
-            CollisionDirection dir = CheckWallCollision(obj.GetComponent<BoxCollider2D>(), false);
+            CollisionDirection dir = CheckWallCollision(obj.GetComponent<BoxCollider2D>(), true);
             if (
                 dir == CollisionDirection.Up && gravityDirection > 0 ||
                 dir == CollisionDirection.Down && gravityDirection < 0 
@@ -130,8 +132,7 @@ public class PlayerController : MonoBehaviour
             }
         }
         
-        velocity -= new Vector2(0, acceleration*gravityDirection) * Time.deltaTime;
-        position += new Vector2(velocity.x + velocityToAdd.x, velocity.y + Math.Min(0.0f, velocityToAdd.y - 0.1f)) * Time.deltaTime;
+        position += new Vector2(velocity.x + velocityToAdd.x, velocity.y + Math.Min(0.0f, velocityToAdd.y - 0.1f * gravityDirection)) * Time.deltaTime;
         GetComponent<Transform>().position = new Vector3(position.x, position.y);
 
 
@@ -176,63 +177,140 @@ public class PlayerController : MonoBehaviour
         float dy = CollisionRightUp.y - CollisionLeftDown.y;
         if (up && left)
         {
-            if (dx > dy) left = false;
+            if (dx+0.1f > dy) left = false;
             else up = false;
         }
         if (up && right)
         {
-            if (dx > dy) right = false;
+            if (dx + 0.1f > dy) right = false;
             else up = false;
         }
         if (down && left)
         {
-            if (dx > dy) left = false;
+            if (dx + 0.1f > dy) left = false;
             else down = false;
         }
         if (down && right)
         {
-            if (dx > dy) right = false;
+            if (dx + 0.1f > dy) right = false;
             else down = false;
         }
+        bool isBox = collision.gameObject.tag.StartsWith("WallBox");
+        bool isBoxDown = isBox;
+        bool isBoxUp = isBox;
+        bool isBoxRight = isBox;
+        bool isBoxLeft = isBox;
 
+
+        if (isBox)
+            isBoxDown = !collision.gameObject.GetComponent<BoxController>().existDownDirection;
+        if (isBox)
+            isBoxUp = !collision.gameObject.GetComponent<BoxController>().existUpDirection;
+        if (isBox)
+            isBoxRight = !collision.gameObject.GetComponent<BoxController>().existRightDirection;
+        if (isBox)
+            isBoxLeft = !collision.gameObject.GetComponent<BoxController>().existLeftDirection;
+
+        //Debug.Log(isBoxRight);
         if (up)
-        {
-            if(velocityMove) velocity = new Vector2(velocity.x, Math.Max(0.0f,velocity.y) );
-            if(gravityDirection > 0)
-                position = new Vector2(position.x, wallRightUp.y + playerSize.y * 0.5f);
-            else
-                position = new Vector2(position.x, wallRightUp.y + playerSize.y * 0.52f);
+            {
+                if (!isBoxUp)
+                {
+                    if (velocityMove) velocity = new Vector2(velocity.x, Math.Max(0.0f, velocity.y));
+                    if (gravityDirection > 0)
+                        position = new Vector2(position.x, wallRightUp.y + playerSize.y * 0.5f);
+                    else
+                        position = new Vector2(position.x, wallRightUp.y + playerSize.y * 0.52f);
 
-            //this came from up
-            return CollisionDirection.Up;
+                    //this came from up
+                    return CollisionDirection.Up;
+                }
+                else
+                {
 
-        }
-        if (down)
-        {
-            if (velocityMove) velocity = new Vector2(velocity.x, Math.Min(0.0f, velocity.y));
-            if(gravityDirection>0)
-                position = new Vector2(position.x, wallLeftDown.y - playerSize.y * 0.52f);
-            else
-                position = new Vector2(position.x, wallLeftDown.y - playerSize.y * 0.5f);
+                Vector2 sp = collision.gameObject.GetComponent<BoxController>().velocity;
+                Vector2 pos = collision.gameObject.GetComponent<BoxController>().position;
+                Vector2 psz = collision.gameObject.GetComponent<BoxCollider2D>().size;
+                if (velocityMove) collision.gameObject.GetComponent<BoxController>().velocity = new Vector2(sp.x, Math.Min(0.0f, sp.y));
+                    if (gravityDirection > 0)
+                        collision.gameObject.GetComponent<BoxController>().position = new Vector2(pos.x, CollisionLeftDown.y - psz.y * 0.52f);
+                    else
+                        collision.gameObject.GetComponent<BoxController>().position = new Vector2(pos.x, CollisionLeftDown.y - psz.y * 0.5f);
 
-            //this came from down
-            return CollisionDirection.Down;
-        }
-        if (left)
-        {
-            //this came from left
-            if (velocityMove) velocity = new Vector2(Math.Min(0.0f, velocity.x), velocity.y);
-            position = new Vector2(wallLeftDown.x - playerSize.x * 0.5f, position.y);
-            return CollisionDirection.Left;
-        }
-        if (right)
-        {
-            if (velocityMove) velocity = new Vector2(Math.Max(0.0f, velocity.x), velocity.y);
-            position = new Vector2(wallRightUp.x + playerSize.x * 0.5f, position.y);
-            return CollisionDirection.Right;
-            //this came from right;
-        }
+                    //this came from down
+                    return CollisionDirection.Up;
+                }
 
+            }
+            if (down)
+            {
+                if(!isBoxDown)
+                {
+                    if (velocityMove) velocity = new Vector2(velocity.x, Math.Min(0.0f, velocity.y));
+                    if (gravityDirection > 0)
+                        position = new Vector2(position.x, wallLeftDown.y - playerSize.y * 0.52f);
+                    else
+                        position = new Vector2(position.x, wallLeftDown.y - playerSize.y * 0.5f);
+
+                    //this came from down
+                    return CollisionDirection.Down;
+                }
+                else
+                {
+
+                    Vector2 sp = collision.gameObject.GetComponent<BoxController>().velocity;
+                    Vector2 pos = collision.gameObject.GetComponent<BoxController>().position;
+                    Vector2 psz = collision.gameObject.GetComponent<BoxCollider2D>().size;
+                    if (velocityMove) collision.gameObject.GetComponent<BoxController>().velocity = new Vector2(sp.x, Math.Max(0.0f, sp.y));
+                    if (gravityDirection > 0)
+                        collision.gameObject.GetComponent<BoxController>().position = new Vector2(pos.x, CollisionRightUp.y + psz.y * 0.5f);
+                    else
+                        collision.gameObject.GetComponent<BoxController>().position = new Vector2(pos.x, CollisionRightUp.y + psz.y * 0.52f);
+
+                    //this came from up
+                    return CollisionDirection.Down;
+                }
+            }
+            if (left)
+            {
+                if (!isBoxLeft)
+                {
+                    //this came from left
+                    if (velocityMove) velocity = new Vector2(Math.Min(0.0f, velocity.x), velocity.y);
+                    position = new Vector2(wallLeftDown.x - playerSize.x * 0.5f, position.y);
+                    return CollisionDirection.Left;
+                }
+                else
+                {
+                    Vector2 sp = collision.gameObject.GetComponent<BoxController>().velocity;
+                    Vector2 pos = collision.gameObject.GetComponent<BoxController>().position;
+                    Vector2 psz = collision.gameObject.GetComponent<BoxCollider2D>().size;
+
+                    if (velocityMove) collision.gameObject.GetComponent<BoxController>().velocity = new Vector2(Math.Max(0.0f, sp.x), sp.y);
+                    collision.gameObject.GetComponent<BoxController>().position = new Vector2(CollisionRightUp.x + psz.x * 0.5f, pos.y);
+                    return CollisionDirection.Left;
+                }
+            }
+            if (right)
+            {
+                if (!isBoxRight)
+                {
+                    if (velocityMove) velocity = new Vector2(Math.Max(0.0f, velocity.x), velocity.y);
+                    position = new Vector2(wallRightUp.x + playerSize.x * 0.5f, position.y);
+                    return CollisionDirection.Right;
+                    //this came from right;
+                }
+                else
+            {
+                Vector2 sp = collision.gameObject.GetComponent<BoxController>().velocity;
+                Vector2 pos = collision.gameObject.GetComponent<BoxController>().position;
+                Vector2 psz = collision.gameObject.GetComponent<BoxCollider2D>().size;
+
+                if (velocityMove) collision.gameObject.GetComponent<BoxController>().velocity = new Vector2(Math.Min(0.0f, sp.x), sp.y);
+                    collision.gameObject.GetComponent<BoxController>().position = new Vector2(CollisionLeftDown.x - psz.x * 0.5f, pos.y);
+                    return CollisionDirection.Right;
+                }
+            }
         return CollisionDirection.None;
     }
 
